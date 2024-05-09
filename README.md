@@ -1,4 +1,4 @@
-All code published in this repository is published under a CC-BY-NC-SA license. You are free to: 
+All content published in this repository is published under a CC-BY-NC-SA license. You are free to: 
 
 - Share — copy and redistribute the material in any medium or format
 - Adapt — remix, transform, and build upon the material
