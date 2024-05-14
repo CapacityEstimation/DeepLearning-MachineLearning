@@ -83,14 +83,13 @@ if __name__ == '__main__':
         criterion = nn.MSELoss()
         criterion2 = nn.L1Loss()
 
-        
-
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
         train_losses = []
         test_losses = []
 
+        # Training loop
         for epoch in range(args.num_epochs):
             model.train()
             epoch_loss = 0
@@ -106,11 +105,11 @@ if __name__ == '__main__':
 
                 epoch_loss+=loss.item() * data.shape[0]
 
-
             train_losses.append(epoch_loss / len(train_dataset))
 
             print('Epoch [{}/{}], Train Loss: {:.4f}'.format(epoch + 1, args.num_epochs, epoch_loss/len(train_dataset)))
-            
+
+            # Test loop
             model.eval()
             test_loss = 0
             mean_absolute_error_lstm = 0
@@ -136,9 +135,8 @@ if __name__ == '__main__':
 
             print(
                 'Epoch [{}/{}], Test Loss: {:.4f}, Test RMSE: {:.4f}, Test MAE: {:.4f}, Test MAPE: {:.4f}'.format(epoch + 1, args.num_epochs, test_loss/len(test_dataset), test_rmse, mean_absolute_error_lstm/len(test_dataset), mean_absolute_percentage_error_lstm))
-
+    # XGBoost
     elif args.model == "XGBoost":
-        # XGBoost
         train_data_list = [train_dataset.__getitem__(i)[0] for i in range(len(train_dataset))]
         train_labels_list = [train_dataset.__getitem__(i)[1]['capacity'] for i in range(len(train_dataset))]
         train_data = np.array(train_data_list).reshape(len(train_data_list), -1)
@@ -169,7 +167,8 @@ if __name__ == '__main__':
         print('test MAE', mean_absolute_error(test_labels, test_predictions))
         print('test MAPE', mean_absolute_percentage_error(test_labels, test_predictions) / len(test_labels),'%')
         print("Test RMSE:", np.sqrt(np.mean((test_predictions - test_labels) ** 2)))
-            
+
+    #ARIMA
     elif args.model == 'ARIMA':
         
         train_labels_list = [train_dataset.__getitem__(i)[1]['capacity'] for i in range(len(train_dataset))]
@@ -189,26 +188,15 @@ if __name__ == '__main__':
         test_labels = np.array(test_labels_list)
         test_series = np.array(test_labels_list)
 
-        exog_train = train_data_np.reshape(train_data_np.shape[0], -1)[:, :128]  # Assuming the first 128 columns are the exogenous variables
-        exog_test = test_data_np.reshape(test_data_np.shape[0], -1)[:, :128]  # Assuming the first 128 columns are the exogenous variables
-
-        for i in range(exog_train.shape[1]):
-            adf_result = adfuller(exog_train[:, i])
-            test_statistic = adf_result[0]
-            p_value = adf_result[1]
-            
-            # Check for non-stationarity
-            if p_value < 0.05:
-                print(f"Exogenous variable {i+1} is stationary. Test Statistic: {test_statistic}")
-            else:
-                print(f"Exogenous variable {i+1} is non-stationary. Test Statistic: {test_statistic}")
+        exog_train = train_data_np.reshape(train_data_np.shape[0], -1)[:, :128]
+        exog_test = test_data_np.reshape(test_data_np.shape[0], -1)[:, :128]
 
         #ARIMAX model fitting
         order = (2, 0, 1) 
         model = ARIMA(train_labels_list, order=order, exog=exog_train, trend='n')
         model_fit = model.fit()
 
-        # Predictions
+        # Predicting
         test_pred = model_fit.forecast(steps=len(test_labels_list), exog=exog_test)
 
         test_rmse = np.sqrt(mean_squared_error(test_labels_list, test_pred))
@@ -219,6 +207,7 @@ if __name__ == '__main__':
         test_mape = mean_absolute_percentage_error(test_pred, test_labels_list)
         print("test MAPE:", test_mape / len(test_dataset))
 
+    #TCN
     elif args.model == 'TCN':
         model = TCN(input_size=8, output_size=1, num_channels=[128, 64, 32], kernel_size=3, dropout=0.2).cuda()
         optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
