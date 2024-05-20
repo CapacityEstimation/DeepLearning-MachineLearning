@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     print("args", args)
 
-    # load dataset
+    # load dataset code from He et al. (2022)
     if args.load_saved_dataset:
         with open(f'saved_dataset/train_dataset_fold_{args.fold_num}.pkl', 'rb') as f:
             train_dataset = pickle.load(f)
@@ -135,7 +135,8 @@ if __name__ == '__main__':
 
             print(
                 'Epoch [{}/{}], Test Loss: {:.4f}, Test RMSE: {:.4f}, Test MAE: {:.4f}, Test MAPE: {:.4f}'.format(epoch + 1, args.num_epochs, test_loss/len(test_dataset), test_rmse, mean_absolute_error_lstm/len(test_dataset), mean_absolute_percentage_error_lstm))
-    # XGBoost
+            
+    # XGBoost partially adapted code from He et al. (2022)
     elif args.model == "XGBoost":
         train_data_list = [train_dataset.__getitem__(i)[0] for i in range(len(train_dataset))]
         train_labels_list = [train_dataset.__getitem__(i)[1]['capacity'] for i in range(len(train_dataset))]
